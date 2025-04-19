@@ -1,4 +1,3 @@
-use crate::core::config::Config;
 use std::{
     fs::{self, OpenOptions},
     io::{self, ErrorKind},
@@ -6,21 +5,21 @@ use std::{
     process::Command,
 };
 
-pub fn save_file(file: String) -> Result<(), io::Error> {
+pub fn save_file(file: &str) -> Result<(), io::Error> {
     OpenOptions::new()
         .write(true)
         .create_new(true)
-        .open(file.clone())?;
+        .open(file)?;
     Ok(())
 }
 
-pub fn open_file(cmd: String, file: String) -> Result<(), io::Error> {
+pub fn open_file(cmd: &str, file: &str) -> Result<(), io::Error> {
     Command::new(cmd).arg(file).status()?;
     Ok(())
 }
 
-pub fn ensure_all_dirs(path: String) -> Result<(), io::Error> {
-    let path = Path::new(path.as_str());
+pub fn ensure_all_dirs(path: &str) -> Result<(), io::Error> {
+    let path = Path::new(path);
     if let Some(parent) = path.parent() {
         match fs::create_dir_all(parent) {
             Ok(_) => {}
@@ -35,7 +34,7 @@ pub fn path_exists<P: AsRef<Path>>(path: P) -> bool {
     path.exists()
 }
 
-pub fn find_projects(dir: String) -> Result<Vec<(String, String)>, io::Error> {
+pub fn find_projects(dir: &str) -> Result<Vec<(String, String)>, io::Error> {
     let mut projects = Vec::new();
     let dir = Path::new(&dir);
 
@@ -58,17 +57,9 @@ pub fn find_projects(dir: String) -> Result<Vec<(String, String)>, io::Error> {
     Ok(projects)
 }
 
-pub fn select_project(config: Config) -> Result<String, io::Error> {
-    let projects_dir = config.core.note_dir + "/projects";
-    let projects = match find_projects(projects_dir) {
-        Ok(p) => p,
-        Err(_) => {
-            return Err(io::Error::new(
-                ErrorKind::NotFound,
-                "Couldn't find or access either the projects-dir or even the whole note-dir.",
-            ))
-        }
-    };
+pub fn select_project(note_dir: &str) -> Result<String, io::Error> {
+    let projects_dir = format!("{}/projects", note_dir);
+    let projects = find_projects(&projects_dir)?;
     if projects.is_empty() {
         return Err(io::Error::new(
             io::ErrorKind::NotFound,
@@ -77,20 +68,13 @@ pub fn select_project(config: Config) -> Result<String, io::Error> {
     }
     cliclack::intro(console::style(" Grom ").on_cyan().black()).unwrap();
 
-    let mut items: Vec<(String, String, String)> = Vec::new();
-    for (_index, (name, path)) in projects.iter().enumerate() {
-        items.push((name.clone(), path.clone(), String::from("")));
-    }
-    match cliclack::select(format!("Select a Project"))
+    let items: Vec<_> = projects
+        .iter()
+        .map(|(name, path)| (name.clone(), path.clone(), String::new()))
+        .collect();
+
+    cliclack::select("Select a Project".to_string())
         .items(&items)
         .interact()
-    {
-        Ok(index) => return Ok(index),
-        Err(_) => {
-            return Err(io::Error::new(
-                ErrorKind::Interrupted,
-                "Couldn't select a project.",
-            ))
-        }
-    };
+        .map_err(|_| io::Error::new(ErrorKind::Other, "Error selecting project"))
 }

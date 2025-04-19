@@ -1,12 +1,2 @@
-- quick fix panic if ctrl+c in interactive selection
-- version update
-- added changelog to readme
-- fix reamde typos
-- made a proper readme, added changelog and fixed an import
-- fixed a bug in interactive selection and refactored a bit
-- removed always_open flag and refactored quick note to take argument
-- added config default values, git integration and did some refactoring
-- added git integration and did some refactoring
-- Added readme and metadata
-- Create LICENSE
-- Initial
+- code refactoring
+- updated dependencies

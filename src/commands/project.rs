@@ -1,68 +1,28 @@
 use crate::core::config::Config;
 use crate::core::utils;
-use std::{io, process};
+use std::io;
 
-pub fn create(project_name: String, config: Config) {
-    let path = config.core.note_dir.clone() + "/projects/" + project_name.as_str() + "/start.md";
+pub fn create(project_name: String, config: Config) -> Result<(), std::io::Error> {
+    let path = format!("{}/projects/{}/.start.md", config.core.note_dir, project_name);
 
-    if utils::path_exists(path.clone()) {
-        cliclack::note("-_-", "Project already exists.").unwrap();
-        process::exit(1);
+    if utils::path_exists(&path) {
+        Err(io::Error::new(io::ErrorKind::AlreadyExists, "Project already exists."))
     } else {
-        match utils::ensure_all_dirs(path.clone()) {
-            Ok(_) => (),
-            Err(e) => {
-                cliclack::note("T_T", format!("Unable to create all parent-dirs: {}", e)).unwrap();
-                process::exit(1);
-            }
-        }
-        match utils::save_file(path) {
-            Ok(_) => {
-                cliclack::note("^_^", "Project created.").unwrap();
-                process::exit(0);
-            }
-            Err(e) => {
-                cliclack::note("T_T", format!("Unable to save file: {}", e)).unwrap();
-                process::exit(1);
-            }
-        }
+        utils::ensure_all_dirs(&path)?;
+        utils::save_file(&path)
     }
 }
 
-pub fn open(project_name: String, config: Config) {
-    let project_base: String =
-        config.core.note_dir.clone() + "/projects/" + project_name.as_str() + "/start.md";
-    if utils::path_exists(project_base.clone()) {
-        match utils::open_file(config.core.editor.clone(), project_base.clone()) {
-            Ok(_) => (),
-            Err(e) => {
-                cliclack::note("T_T", format!("Unable to open file: {}", e)).unwrap();
-                process::exit(1);
-            }
-        }
+pub fn open(project_name: String, config: Config) -> Result<(), std::io::Error> {
+    let project_base = format!("{}/projects/{}/start.md", config.core.note_dir, project_name);
+    if utils::path_exists(&project_base) {
+        utils::open_file(&config.core.editor, &project_base)
     } else {
-        cliclack::note("-_-", "Project does not exist.").unwrap();
-        process::exit(0);
+        Err(io::Error::new(io::ErrorKind::NotFound, "Project does not exist."))
     }
 }
 
-pub fn interative_selecion(config: Config) {
-    let open_cmd = config.core.editor.clone();
-    let project = match utils::select_project(config) {
-        Ok(p) => p,
-        Err(e) => {
-            if e.kind() == io::ErrorKind::Interrupted {
-                process::exit(0);
-            }
-            cliclack::note("-_-", "No Projects found.").unwrap();
-            process::exit(1);
-        }
-    };
-    match utils::open_file(open_cmd, project) {
-        Ok(_) => process::exit(0),
-        Err(e) => {
-            cliclack::note("T_T", format!("Unable to open file: {}", e)).unwrap();
-            process::exit(1);
-        }
-    }
+pub fn interactive_selecion(config: Config) -> Result<(), std::io::Error> {
+    let project = utils::select_project(&config.core.note_dir)?;
+    utils::open_file(&config.core.editor,&project)
 }

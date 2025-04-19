@@ -2,7 +2,7 @@
 name = "grom"
 description = "CLI for Note Taking"
 repository = "https://github.com/alwaysamer/grom"
-version = "0.2.2"
+version = "0.3.0"
 readme = "README.md"
 edition = "2021"
 license = "Apache-2.0"

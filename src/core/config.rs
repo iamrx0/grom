@@ -28,10 +28,7 @@ pub fn load_config() -> Result<Config, io::Error> {
     let home_path = String::from(dirs::home_dir().unwrap().to_str().unwrap());
     let filename = home_path + "/.config/grom/grom.toml";
 
-    let contents = match fs::read_to_string(filename.clone()) {
-        Ok(c) => c,
-        Err(e) => return Err(e),
-    };
+    let contents = fs::read_to_string(filename.clone())?;
 
     let data: Config = match toml::from_str(&contents) {
         Ok(d) => {

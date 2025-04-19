@@ -1,9 +1,8 @@
 use crate::core::config::Config;
 use crate::core::utils;
 use chrono::{Datelike, Local};
-use std::process;
 
-pub fn daily_diary(config: Config) {
+pub fn daily_diary(config: Config) -> Result<(), std::io::Error> {
     let today = Local::now();
     let file = format!(
         "{}/diary/{}/{}/week{}/{}.md",
@@ -13,40 +12,15 @@ pub fn daily_diary(config: Config) {
         today.iso_week().week(),
         today.format("%m-%d-%Y")
     );
-    if utils::path_exists(file.clone()) {
-        match utils::open_file(config.core.editor.clone(), file.clone()) {
-            Ok(_) => process::exit(0),
-            Err(e) => {
-                cliclack::note("T_T", format!("Unable to open file:  {}", e)).unwrap();
-                process::exit(1);
-            }
-        }
+    if utils::path_exists(&file) {
+        return utils::open_file(&config.core.editor, &file) 
     }
-    match utils::ensure_all_dirs(file.clone()) {
-        Ok(_) => (),
-        Err(e) => {
-            cliclack::note("T_T", format!("Unable to create all parent-dirs: {}", e)).unwrap();
-            process::exit(1);
-        }
-    }
-    match utils::save_file(file.clone()) {
-        Ok(_) => (),
-        Err(e) => {
-            cliclack::note("T_T", format!("Unable to save file: {}", e)).unwrap();
-            process::exit(1);
-        }
-    }
-
-    match utils::open_file(config.core.editor.clone(), file.clone()) {
-        Ok(_) => process::exit(0),
-        Err(e) => {
-            cliclack::note("T_T", format!("Unable to open file:  {}", e)).unwrap();
-            process::exit(1);
-        }
-    }
+    utils::ensure_all_dirs(&file)?;
+    utils::save_file(&file)?;
+    utils::open_file(&config.core.editor, &file)
 }
 
-pub fn weekly_diary(config: Config) {
+pub fn weekly_diary(config: Config) -> Result<(), std::io::Error>{
     let today = Local::now();
     let file = format!(
         "{}/diary/{}/{}/week{}/week.md",
@@ -56,38 +30,14 @@ pub fn weekly_diary(config: Config) {
         today.iso_week().week(),
     );
     if utils::path_exists(file.clone()) {
-        match utils::open_file(config.core.editor.clone(), file.clone()) {
-            Ok(_) => (),
-            Err(e) => {
-                cliclack::note("T_T", format!("Unable to open file: {}", e)).unwrap();
-                process::exit(1);
-            }
-        }
+        return utils::open_file(&config.core.editor, &file)
     }
-    match utils::ensure_all_dirs(file.clone()) {
-        Ok(_) => (),
-        Err(e) => {
-            cliclack::note("T_T", format!("Unable to create all parent-dirs: {}", e)).unwrap();
-            process::exit(1);
-        }
-    }
-    match utils::save_file(file.clone()) {
-        Ok(_) => (),
-        Err(e) => {
-            cliclack::note("T_T", format!("Unable to save file {}", e)).unwrap();
-            process::exit(0);
-        }
-    }
-    match utils::open_file(config.core.editor.clone(), file.clone()) {
-        Ok(_) => process::exit(0),
-        Err(e) => {
-            cliclack::note("T_T", format!("Unable to open file:  {}", e)).unwrap();
-            process::exit(1);
-        }
-    }
+    utils::ensure_all_dirs(&file)?;
+    utils::save_file(&file)?;
+    utils::open_file(&config.core.editor, &file)
 }
 
-pub fn monthly_diary(config: Config) {
+pub fn monthly_diary(config: Config) -> Result<(), std::io::Error>{
     let today = Local::now();
     let file = format!(
         "{}/diary/{}/{}/month.md",
@@ -96,33 +46,9 @@ pub fn monthly_diary(config: Config) {
         today.format("%B"),
     );
     if utils::path_exists(file.clone()) {
-        match utils::open_file(config.core.editor.clone(), file.clone()) {
-            Ok(_) => (),
-            Err(e) => {
-                cliclack::note("T_T", format!("Unable to open file: {}", e)).unwrap();
-                process::exit(1);
-            }
-        }
+        return utils::open_file(&config.core.editor, &file)
     }
-    match utils::ensure_all_dirs(file.clone()) {
-        Ok(_) => (),
-        Err(e) => {
-            cliclack::note("T_T", format!("Unable to create all parent-dirs: {}", e)).unwrap();
-            process::exit(1)
-        }
-    }
-    match utils::save_file(file.clone()) {
-        Ok(_) => (),
-        Err(e) => {
-            cliclack::note("T_T", format!("Unable to save file: {}", e)).unwrap();
-            process::exit(1);
-        }
-    }
-    match utils::open_file(config.core.editor.clone(), file.clone()) {
-        Ok(_) => process::exit(0),
-        Err(e) => {
-            cliclack::note("T_T", format!("Unable to open file:  {}", e)).unwrap();
-            process::exit(1);
-        }
-    }
+    utils::ensure_all_dirs(&file)?;
+    utils::save_file(&file)?;
+    utils::open_file(&config.core.editor, &file)
 }

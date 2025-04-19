@@ -1,5 +1,4 @@
 use std::process;
-
 use clap::{Parser, Subcommand};
 use grom::commands::{diary, project, quick_note, sync};
 use grom::core::config;
@@ -52,30 +51,64 @@ fn main() {
     let cli = Cli::parse();
     let config = match config::load_config() {
         Ok(cfg) => cfg,
-        Err(e) => {
-            cliclack::note("T_T", format!("Unable to load config: {}", e.to_string())).unwrap();
+        Err(_) => {
+            cliclack::note("T_T", "Unable to load config.").unwrap();
             process::exit(1);
         }
     };
 
     if let Some(command) = &cli.command {
         match &command {
-            Command::Quick { note_name } => quick_note::quick_note(note_name.clone(), config),
-            Command::Today {} => diary::daily_diary(config),
-            Command::Week {} => diary::weekly_diary(config),
-            Command::Month {} => diary::monthly_diary(config),
-            Command::New { project_name } => project::create(project_name.clone(), config),
-            Command::Sync { command } => match command {
-                SyncCommand::Init { remote_url } => {
-                    sync::init(remote_url.clone(), config);
+            Command::Quick { note_name } => {
+                if quick_note::quick_note(note_name, config).is_err() {
+                    cliclack::note("T_T", "Unable to create quick note").unwrap();
                 }
-                SyncCommand::Push { message } => sync::push(message.to_owned(), config),
-                SyncCommand::Pull {} => sync::pull(config),
             },
+            Command::Today {} => {
+                if diary::daily_diary(config).is_err() {
+                    cliclack::note("T_T", "Unable to create daily diary").unwrap();
+                }
+            },
+            Command::Week {} => {
+                if diary::weekly_diary(config).is_err() {
+                    cliclack::note("T_T", "Unable to create weekly diary").unwrap();
+                }
+            },
+            Command::Month {} => {
+                if diary::monthly_diary(config).is_err() {
+                    cliclack::note("T_T", "Unable to create monthly diary").unwrap();
+                }
+            },
+            Command::New { project_name } => {
+                if project::create(project_name.clone(), config).is_err() {
+                    cliclack::note("T_T", "Unable to create project").unwrap();
+                }
+            },
+            Command::Sync { command } => {
+                match command {
+                    SyncCommand::Init { remote_url } => {
+                        if sync::init(remote_url.clone(), config).is_err() {
+                            cliclack::note("T_T", "Unable to initialize sync.").unwrap();
+                        }
+                    }
+                    SyncCommand::Push { message } => {
+                        if sync::push(message.clone(), config).is_err() {
+                            cliclack::note("T_T", "Unable to push changes.").unwrap();
+                        }
+                    }
+                    SyncCommand::Pull {} => {
+                        if sync::pull(config).is_err() {
+                            cliclack::note("T_T", "Unable to pull changes.").unwrap();
+                        }
+                    }
+                }
+            }
         }
     } else if let Some(project) = &cli.project {
-        project::open(project.clone(), config);
-    } else {
-        project::interative_selecion(config);
+        if project::open(project.clone(), config).is_err() {
+            cliclack::note("T_T", "Unable to open project").unwrap();
+        }
+    } else if project::interactive_selecion(config).is_err() {
+        cliclack::note("T_T", "Unable to open project").unwrap();
     }
 }
